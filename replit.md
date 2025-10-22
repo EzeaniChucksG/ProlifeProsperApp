@@ -10,15 +10,17 @@ Donor-facing mobile application built with Expo/React Native for ProLifeProsper,
 
 ### Phase 1 MVP - Donor App Features Completed ✅
 1. **Authentication System**
-   - Login/Register screens with JWT-based auth
+   - Login/Register screens with mock authentication for demo
    - Persistent auth state using AsyncStorage
    - Navigation guards protecting authenticated routes
+   - Real JWT-based auth code ready (commented out until CORS fixed)
 
 2. **Home Screen**
    - Quick Donate with preset amounts ($10, $25, $50, $100) and custom input
+   - Impact Dashboard showing total giving, donations, lives saved, organizations
    - Saved organizations display (max 3)
    - Featured campaigns (max 3)
-   - QR code scanner placeholder
+   - QR code scanner button
 
 3. **Campaigns Screen**
    - Browse all campaigns with search functionality
@@ -36,6 +38,8 @@ Donor-facing mobile application built with Expo/React Native for ProLifeProsper,
    - Amount selection (preset + custom)
    - One-time vs recurring donations
    - Frequency selection (monthly, quarterly, annually)
+   - Payment method selection (Card, Apple Pay, Google Pay)
+   - Platform-specific payment buttons (iOS shows Apple Pay, Android shows Google Pay)
    - Campaign and organization context preservation
    - Success/error feedback
    - API integration with error handling
@@ -47,8 +51,42 @@ Donor-facing mobile application built with Expo/React Native for ProLifeProsper,
 
 7. **Profile Screen**
    - User information display
-   - Navigation menu (settings, payment methods, saved orgs, receipts)
+   - Functional navigation menu (settings, payment methods, saved orgs, receipts, notifications)
    - Logout functionality
+
+8. **QR Code Scanner** ✨ NEW
+   - Full camera-based QR code scanning
+   - Permission handling with user-friendly messages
+   - Instant navigation to campaigns or organizations from scanned codes
+   - Expected format: `prolifeprosper://campaign/{id}` or `prolifeprosper://org/{id}`
+   - Robust path parsing with regex-based slash removal
+
+9. **Payment Methods Screen** ✨ NEW
+   - Manage saved payment methods
+   - Credit/debit card management
+   - Bank account (ACH) management
+   - Digital wallet management (Apple Pay, Google Pay, PayPal, Venmo)
+   - Default payment method selection
+   - Add/remove payment methods
+
+10. **Push Notifications Settings** ✨ NEW
+    - Comprehensive notification preferences
+    - Channel selection (Push, Email, SMS)
+    - Granular controls for notification types:
+      - Donation receipts
+      - Campaign updates
+      - Monthly impact reports
+      - Thank you messages
+      - Goal milestones
+      - Emergency alerts
+    - Settings persist to AsyncStorage
+
+11. **Impact Dashboard** ✨ NEW
+    - Total giving amount displayed
+    - Number of donations tracked
+    - Lives saved metric (mission-focused)
+    - Organizations supported count
+    - Prominent display on Home screen
 
 ## Project Architecture
 
@@ -65,13 +103,16 @@ Donor-facing mobile application built with Expo/React Native for ProLifeProsper,
 app/
 ├── (auth)/              # Authentication screens (login, register)
 ├── (tabs)/              # Main tab navigation screens
-│   ├── index.tsx        # Home screen (Quick Donate)
+│   ├── index.tsx        # Home screen (Quick Donate + Impact Dashboard)
 │   ├── campaigns.tsx    # Campaigns browsing
 │   ├── donations.tsx    # Donation history
 │   └── profile.tsx      # User profile
 ├── campaign/
 │   └── [id].tsx         # Campaign detail screen (dynamic route)
-├── donate.tsx           # Donation flow screen
+├── donate.tsx           # Donation flow screen (with payment methods)
+├── scan.tsx             # QR code scanner
+├── payment-methods.tsx  # Payment method management
+├── notifications.tsx    # Push notification settings
 └── _layout.tsx          # Root layout with auth guards
 
 contexts/
@@ -124,9 +165,9 @@ shared/
 ## API Integration
 
 ### Base Configuration
-- **Development:** http://localhost:5000/api
-- **Authentication:** Bearer token in Authorization header
-- **Storage:** AsyncStorage for auth tokens and user data
+- **Development:** https://3fdd1b5d-bf9f-479f-a189-ae81cc75d815-00-3rf10jd7rr2hm.kirk.replit.dev/api
+- **Authentication:** Bearer token in Authorization header (currently mock auth for demo)
+- **Storage:** AsyncStorage for auth tokens, user data, and notification preferences
 
 ### Key Endpoints Used
 - `POST /api/auth/login` - User authentication
@@ -164,15 +205,27 @@ shared/
 7. Event management
 8. Financial reporting
 
-### Pending Phase 1 Features
-- QR code scanner implementation (currently placeholder)
-- Automated testing (smoke tests recommended)
-- On-device testing with backend sandbox
-- Deployment testing
+### Completed Phase 1 Features
+All Phase 1 MVP features are now complete and ready for testing:
+- ✅ Core donor flow (browse, donate, history)
+- ✅ QR code scanner for event donations
+- ✅ Payment methods management
+- ✅ Apple Pay / Google Pay integration
+- ✅ Push notification preferences
+- ✅ Impact dashboard
+
+### Recommended Next Steps
+- Enable real authentication when backend CORS is configured
+- On-device testing with physical devices
+- Automated testing (smoke tests)
+- Backend integration testing
+- App store deployment preparation
 
 ## Notes
 - Mobile app uses AsyncStorage (not localStorage) for persistence
 - All navigation properly wired between screens
 - Organization context properly passed through donation flows
-- Backend must be running on localhost:5000 for development
-- Architect-approved MVP ready for deployment testing
+- Mock authentication enabled for UI/feature exploration (real auth ready when CORS configured)
+- QR code scanner uses camera permissions and URL parsing for instant donations
+- Platform-specific features (Apple Pay on iOS, Google Pay on Android)
+- All Phase 1 features architect-reviewed and ready for device testing
