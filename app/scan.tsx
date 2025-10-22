@@ -45,8 +45,9 @@ export default function QRScannerScreen() {
       const url = new URL(data);
       
       if (url.protocol === 'prolifeprosper:') {
-        const path = url.pathname.replace('//', '');
-        const [entityType, entityId] = path.split('/');
+        // Remove leading slashes and split the path
+        const pathParts = url.pathname.replace(/^\/+/, '').split('/');
+        const [entityType, entityId] = pathParts;
 
         if (entityType === 'campaign' && entityId) {
           // Navigate to campaign donation page

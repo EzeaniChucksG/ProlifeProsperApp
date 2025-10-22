@@ -13,6 +13,12 @@ export default function HomeScreen() {
   const [featuredCampaigns, setFeaturedCampaigns] = useState<Campaign[]>([]);
   const [quickDonateAmount, setQuickDonateAmount] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [impactStats, setImpactStats] = useState({
+    totalGiven: 0,
+    donationCount: 0,
+    livesSaved: 0,
+    organizationsSupported: 0,
+  });
 
   useEffect(() => {
     loadData();
@@ -34,6 +40,14 @@ export default function HomeScreen() {
         );
         setSavedOrgs(orgs.filter(Boolean) as Organization[]);
       }
+
+      // Mock impact stats for demo
+      setImpactStats({
+        totalGiven: 1250.00,
+        donationCount: 8,
+        livesSaved: 3,
+        organizationsSupported: 4,
+      });
     } catch (error) {
       console.error('Error loading data:', error);
       Alert.alert('Connection Issue', 'Unable to load campaigns. Please check your connection.');
@@ -69,6 +83,32 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <Text style={styles.greeting}>Welcome back,</Text>
         <Text style={styles.name}>{user?.firstName || 'Donor'}!</Text>
+      </View>
+
+      <View style={styles.impactDashboard}>
+        <Text style={styles.impactTitle}>Your Impact</Text>
+        <View style={styles.impactGrid}>
+          <View style={styles.impactCard}>
+            <Text style={styles.impactValue}>${impactStats.totalGiven.toLocaleString()}</Text>
+            <Text style={styles.impactLabel}>Total Given</Text>
+          </View>
+          <View style={styles.impactCard}>
+            <Text style={styles.impactValue}>{impactStats.donationCount}</Text>
+            <Text style={styles.impactLabel}>Donations</Text>
+          </View>
+        </View>
+        <View style={styles.impactGrid}>
+          <View style={styles.impactCard}>
+            <Text style={[styles.impactValue, styles.impactHighlight]}>
+              {impactStats.livesSaved}
+            </Text>
+            <Text style={styles.impactLabel}>Lives Saved</Text>
+          </View>
+          <View style={styles.impactCard}>
+            <Text style={styles.impactValue}>{impactStats.organizationsSupported}</Text>
+            <Text style={styles.impactLabel}>Organizations</Text>
+          </View>
+        </View>
       </View>
 
       <View style={styles.section}>
@@ -359,5 +399,47 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#0d72b9',
+  },
+  impactDashboard: {
+    backgroundColor: '#f9f9f9',
+    marginTop: 16,
+    padding: 20,
+    borderRadius: 12,
+    marginHorizontal: 16,
+  },
+  impactTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  impactGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  impactCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  impactValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#0d72b9',
+    marginBottom: 4,
+  },
+  impactHighlight: {
+    color: '#26b578',
+  },
+  impactLabel: {
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'center',
   },
 });
