@@ -1,8 +1,9 @@
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
 import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function DonateScreen() {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ export default function DonateScreen() {
   const [amount, setAmount] = useState(presetAmount || '');
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequency, setFrequency] = useState('monthly');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'apple_pay' | 'google_pay'>('card');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const presetAmounts = [25, 50, 100, 250];
@@ -56,7 +58,7 @@ export default function DonateScreen() {
         donorLastName: user.lastName || '',
         organizationId: targetOrgId,
         campaignId: campaignId ? parseInt(campaignId) : undefined,
-        paymentMethod: 'card',
+        paymentMethod: paymentMethod,
         recurringFrequency: isRecurring ? frequency : undefined,
         isAnonymous: false,
       });
@@ -175,6 +177,57 @@ export default function DonateScreen() {
             ))}
           </View>
         )}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Payment Method</Text>
+        
+        {Platform.OS === 'ios' && (
+          <TouchableOpacity
+            style={[
+              styles.paymentMethodButton,
+              styles.applePayButton,
+              paymentMethod === 'apple_pay' && styles.paymentMethodActive,
+            ]}
+            onPress={() => setPaymentMethod('apple_pay')}
+          >
+            <Ionicons name="logo-apple" size={24} color="#000" />
+            <Text style={styles.applePayText}>Pay</Text>
+          </TouchableOpacity>
+        )}
+
+        {Platform.OS === 'android' && (
+          <TouchableOpacity
+            style={[
+              styles.paymentMethodButton,
+              styles.googlePayButton,
+              paymentMethod === 'google_pay' && styles.paymentMethodActive,
+            ]}
+            onPress={() => setPaymentMethod('google_pay')}
+          >
+            <Ionicons name="logo-google" size={20} color="#fff" />
+            <Text style={styles.googlePayText}>Google Pay</Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          style={[
+            styles.paymentMethodButton,
+            styles.cardButton,
+            paymentMethod === 'card' && styles.paymentMethodActive,
+          ]}
+          onPress={() => setPaymentMethod('card')}
+        >
+          <Ionicons name="card-outline" size={24} color="#0d72b9" />
+          <Text style={styles.cardButtonText}>Credit or Debit Card</Text>
+        </TouchableOpacity>
+
+        <View style={styles.paymentNote}>
+          <Ionicons name="lock-closed-outline" size={16} color="#26b578" />
+          <Text style={styles.paymentNoteText}>
+            Secure, encrypted payment processing
+          </Text>
+        </View>
       </View>
 
       <View style={styles.footer}>
@@ -345,5 +398,59 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+  },
+  paymentMethodButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: '#ddd',
+  },
+  paymentMethodActive: {
+    borderColor: '#0d72b9',
+    backgroundColor: '#e7f2fa',
+  },
+  applePayButton: {
+    backgroundColor: '#fff',
+    borderColor: '#000',
+  },
+  applePayText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+    marginLeft: 8,
+  },
+  googlePayButton: {
+    backgroundColor: '#4285F4',
+    borderColor: '#4285F4',
+  },
+  googlePayText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    marginLeft: 8,
+  },
+  cardButton: {
+    backgroundColor: '#fff',
+  },
+  cardButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0d72b9',
+    marginLeft: 12,
+  },
+  paymentNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  paymentNoteText: {
+    fontSize: 13,
+    color: '#666',
+    marginLeft: 6,
   },
 });
