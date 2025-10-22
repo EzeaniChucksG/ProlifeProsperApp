@@ -8,8 +8,7 @@ const getApiBaseUrl = () => {
   // For development, check if we're running in Replit
   // In Replit, localhost won't work - need to use the actual backend URL
   if (typeof window !== 'undefined' && window.location.hostname.includes('replit')) {
-    // Replace this with your actual backend Replit URL
-    return 'https://YOUR_BACKEND_PROJECT.replit.dev/api';
+    return 'https://3fdd1b5d-bf9f-479f-a189-ae81cc75d815-00-3rf10jd7rr2hm.kirk.replit.dev:5000/api';
   }
   
   // Local development (when both apps run locally)
