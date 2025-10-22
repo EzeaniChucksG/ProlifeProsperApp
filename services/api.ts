@@ -11,6 +11,13 @@ import type {
   Event,
   ApiError 
 } from '@/types/api';
+import { 
+  mockOrganizations, 
+  mockCampaigns, 
+  mockDonations,
+  getSavedOrganizations,
+  getFeaturedCampaigns
+} from './mockData';
 
 class ApiClient {
   private baseUrl: string;
@@ -97,11 +104,25 @@ class ApiClient {
     const endpoint = organizationId 
       ? `/organizations/${organizationId}/campaigns`
       : '/campaigns';
-    return this.request<Campaign[]>(endpoint);
+    try {
+      return await this.request<Campaign[]>(endpoint);
+    } catch (error) {
+      console.log('API failed, using mock campaigns data');
+      return organizationId 
+        ? mockCampaigns.filter(c => c.organizationId === organizationId)
+        : mockCampaigns;
+    }
   }
 
   async getCampaign(id: number): Promise<Campaign> {
-    return this.request<Campaign>(`/campaigns/${id}`);
+    try {
+      return await this.request<Campaign>(`/campaigns/${id}`);
+    } catch (error) {
+      console.log('API failed, using mock campaign data');
+      const campaign = mockCampaigns.find(c => c.id === id);
+      if (!campaign) throw new Error(`Campaign ${id} not found`);
+      return campaign;
+    }
   }
 
   async getCampaignBySlug(slug: string): Promise<Campaign> {
@@ -120,7 +141,12 @@ class ApiClient {
     const endpoint = donorId 
       ? `/donors/${donorId}/donations`
       : '/donations';
-    return this.request<Donation[]>(endpoint);
+    try {
+      return await this.request<Donation[]>(endpoint);
+    } catch (error) {
+      console.log('API failed, using mock donations data');
+      return mockDonations;
+    }
   }
 
   async getDonation(id: number): Promise<Donation> {
@@ -129,11 +155,23 @@ class ApiClient {
 
   // Organization endpoints
   async getOrganization(id: number): Promise<Organization> {
-    return this.request<Organization>(`/organizations/${id}`);
+    try {
+      return await this.request<Organization>(`/organizations/${id}`);
+    } catch (error) {
+      console.log('API failed, using mock organization data');
+      const org = mockOrganizations.find(o => o.id === id);
+      if (!org) throw new Error(`Organization ${id} not found`);
+      return org;
+    }
   }
 
   async getOrganizations(): Promise<Organization[]> {
-    return this.request<Organization[]>('/organizations');
+    try {
+      return await this.request<Organization[]>('/organizations');
+    } catch (error) {
+      console.log('API failed, using mock organizations data');
+      return mockOrganizations;
+    }
   }
 
   // Event endpoints

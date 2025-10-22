@@ -79,6 +79,12 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.footer}>
+        <TouchableOpacity
+          style={styles.adminLink}
+          onPress={() => router.push('/(admin-auth)/admin-login')}
+        >
+          <Text style={styles.adminLinkText}>🏢 Organization Admin Login</Text>
+        </TouchableOpacity>
         <Text style={styles.version}>ProLife Prosper v1.0.0</Text>
       </View>
     </ScrollView>
@@ -175,6 +181,16 @@ const styles = StyleSheet.create({
   footer: {
     paddingVertical: 32,
     alignItems: 'center',
+  },
+  adminLink: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  adminLinkText: {
+    fontSize: 14,
+    color: '#0d72b9',
+    fontWeight: '600',
   },
   version: {
     fontSize: 12,

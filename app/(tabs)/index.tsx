@@ -5,6 +5,7 @@ import { api } from '@/services/api';
 import { storage } from '@/services/storage';
 import type { Organization, Campaign } from '@/types/api';
 import { useRouter } from 'expo-router';
+import { calculateImpactStats } from '@/services/mockData';
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -41,13 +42,9 @@ export default function HomeScreen() {
         setSavedOrgs(orgs.filter(Boolean) as Organization[]);
       }
 
-      // Mock impact stats for demo
-      setImpactStats({
-        totalGiven: 1250.00,
-        donationCount: 8,
-        livesSaved: 3,
-        organizationsSupported: 4,
-      });
+      // Calculate real impact stats from mock donations
+      const stats = calculateImpactStats();
+      setImpactStats(stats);
     } catch (error) {
       console.error('Error loading data:', error);
       Alert.alert('Connection Issue', 'Unable to load campaigns. Please check your connection.');
