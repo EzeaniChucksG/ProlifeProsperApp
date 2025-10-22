@@ -1,7 +1,23 @@
+// Get the backend URL from environment variable or use default
+const getApiBaseUrl = () => {
+  // For production/Replit deployment, use environment variable
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+  
+  // For development, check if we're running in Replit
+  // In Replit, localhost won't work - need to use the actual backend URL
+  if (typeof window !== 'undefined' && window.location.hostname.includes('replit')) {
+    // Replace this with your actual backend Replit URL
+    return 'https://YOUR_BACKEND_PROJECT.replit.dev/api';
+  }
+  
+  // Local development (when both apps run locally)
+  return 'http://localhost:5000/api';
+};
+
 export const Config = {
-  API_BASE_URL: __DEV__ 
-    ? 'http://localhost:5000/api'
-    : 'https://your-production-url.com/api',
+  API_BASE_URL: getApiBaseUrl(),
   
   APP_NAME: 'ProLife Prosper',
   
