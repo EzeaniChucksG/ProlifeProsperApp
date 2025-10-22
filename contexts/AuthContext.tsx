@@ -42,19 +42,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (data: LoginRequest) => {
-    const response = await api.login(data);
-    api.setAuthToken(response.token);
-    await storage.setAuthToken(response.token);
-    await storage.setUserData(response.user);
-    setUser(response.user);
+    // TEMPORARY: Mock login for demo purposes (bypassing CORS issues)
+    console.log('🎭 Using mock authentication for demo');
+    
+    const mockUser: User = {
+      id: '1',
+      email: data.email,
+      firstName: 'Demo',
+      lastName: 'User',
+      profileImageUrl: null,
+      phone: null,
+      organizationId: null,
+      role: 'donor',
+      isActive: true,
+      createdAt: new Date(),
+    };
+    
+    const mockToken = 'mock-jwt-token-for-demo';
+    
+    api.setAuthToken(mockToken);
+    await storage.setAuthToken(mockToken);
+    await storage.setUserData(mockUser);
+    setUser(mockUser);
+    
+    // TODO: Replace with real API call once CORS is configured:
+    // const response = await api.login(data);
+    // api.setAuthToken(response.token);
+    // await storage.setAuthToken(response.token);
+    // await storage.setUserData(response.user);
+    // setUser(response.user);
   };
 
   const register = async (data: RegisterRequest) => {
-    const response = await api.register(data);
-    api.setAuthToken(response.token);
-    await storage.setAuthToken(response.token);
-    await storage.setUserData(response.user);
-    setUser(response.user);
+    // TEMPORARY: Mock registration for demo purposes
+    console.log('🎭 Using mock registration for demo');
+    
+    const mockUser: User = {
+      id: '1',
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      profileImageUrl: null,
+      phone: null,
+      organizationId: null,
+      role: 'donor',
+      isActive: true,
+      createdAt: new Date(),
+    };
+    
+    const mockToken = 'mock-jwt-token-for-demo';
+    
+    api.setAuthToken(mockToken);
+    await storage.setAuthToken(mockToken);
+    await storage.setUserData(mockUser);
+    setUser(mockUser);
+    
+    // TODO: Replace with real API call once CORS is configured:
+    // const response = await api.register(data);
+    // api.setAuthToken(response.token);
+    // await storage.setAuthToken(response.token);
+    // await storage.setUserData(response.user);
+    // setUser(response.user);
   };
 
   const logout = async () => {
