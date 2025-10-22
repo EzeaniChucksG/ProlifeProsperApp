@@ -171,7 +171,7 @@ export default function HomeScreen() {
       <View style={styles.section}>
         <TouchableOpacity
           style={styles.qrButton}
-          onPress={() => Alert.alert('QR Scanner', 'QR code scanning feature coming soon!')}
+          onPress={() => router.push('/scan')}
         >
           <Text style={styles.qrButtonIcon}>📷</Text>
           <Text style={styles.qrButtonText}>Scan QR Code to Donate</Text>
