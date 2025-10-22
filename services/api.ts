@@ -37,23 +37,32 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.authToken}`;
     }
 
+    console.log(`API Request: ${options.method || 'GET'} ${this.baseUrl}${endpoint}`);
+    
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       headers,
     });
 
+    console.log(`API Response: ${response.status} ${response.statusText}`);
+
     if (!response.ok) {
       const error: ApiError = await response.json().catch(() => ({
         message: 'An error occurred',
       }));
+      console.error('API Error:', error);
       throw new Error(error.message || 'Request failed');
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log('API Success:', data);
+    return data;
   }
 
   // Auth endpoints
   async login(data: LoginRequest): Promise<LoginResponse> {
+    console.log('API: Attempting login to', `${this.baseUrl}/auth/signin`);
+    console.log('API: Login payload:', { email: data.email, password: '***' });
     return this.request<LoginResponse>('/auth/signin', {
       method: 'POST',
       body: JSON.stringify(data),

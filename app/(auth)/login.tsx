@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, View, Text, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, TextInput, Pressable, View, Text, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -11,19 +11,27 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
+    console.log('Login button clicked!', { email, password: '***' });
+    
     if (!email || !password) {
+      console.log('Validation failed: missing fields');
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
+    console.log('Starting login request...');
     setIsLoading(true);
     try {
+      console.log('Calling login API...');
       await login({ email, password });
+      console.log('Login successful!');
       router.replace('/(tabs)');
     } catch (error: any) {
+      console.error('Login error:', error);
       Alert.alert('Login Failed', error.message || 'Invalid credentials');
     } finally {
       setIsLoading(false);
+      console.log('Login attempt complete');
     }
   };
 
@@ -56,9 +64,16 @@ export default function LoginScreen() {
             editable={!isLoading}
           />
 
-          <TouchableOpacity 
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleLogin}
+          <Pressable 
+            style={({ pressed }) => [
+              styles.button, 
+              isLoading && styles.buttonDisabled,
+              pressed && styles.buttonPressed
+            ]}
+            onPress={() => {
+              console.log('Sign In button pressed');
+              handleLogin();
+            }}
             disabled={isLoading}
           >
             {isLoading ? (
@@ -66,16 +81,19 @@ export default function LoginScreen() {
             ) : (
               <Text style={styles.buttonText}>Sign In</Text>
             )}
-          </TouchableOpacity>
+          </Pressable>
 
-          <TouchableOpacity 
-            onPress={() => router.push('/(auth)/register')}
+          <Pressable 
+            onPress={() => {
+              console.log('Sign Up link clicked');
+              router.push('/(auth)/register');
+            }}
             disabled={isLoading}
           >
             <Text style={styles.linkText}>
               Don't have an account? <Text style={styles.linkTextBold}>Sign Up</Text>
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -120,9 +138,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 8,
+    cursor: 'pointer',
+  },
+  buttonPressed: {
+    opacity: 0.8,
   },
   buttonDisabled: {
     opacity: 0.6,
+    cursor: 'not-allowed',
   },
   buttonText: {
     color: '#fff',
