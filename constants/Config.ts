@@ -1,7 +1,7 @@
 // Backend API URL configuration
-// When running in Replit, use the backend Replit URL
+// When running in Replit, use the backend Replit URL (NO PORT NUMBER!)
 // For local development, use localhost
-const API_BASE_URL = 'https://3fdd1b5d-bf9f-479f-a189-ae81cc75d815-00-3rf10jd7rr2hm.kirk.replit.dev:5000/api';
+const API_BASE_URL = 'https://3fdd1b5d-bf9f-479f-a189-ae81cc75d815-00-3rf10jd7rr2hm.kirk.replit.dev/api';
 
 // Uncomment this line when running both frontend and backend locally:
 // const API_BASE_URL = 'http://localhost:5000/api';
