@@ -1,80 +1,363 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
-
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { api } from '@/services/api';
+import { storage } from '@/services/storage';
+import type { Organization, Campaign } from '@/types/api';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
+  const { user } = useAuth();
+  const router = useRouter();
+  const [savedOrgs, setSavedOrgs] = useState<Organization[]>([]);
+  const [featuredCampaigns, setFeaturedCampaigns] = useState<Campaign[]>([]);
+  const [quickDonateAmount, setQuickDonateAmount] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const [campaigns, savedOrgIds] = await Promise.all([
+        api.getCampaigns().catch(() => []),
+        storage.getSavedOrganizations(),
+      ]);
+      
+      setFeaturedCampaigns(campaigns.slice(0, 3));
+      
+      if (savedOrgIds.length > 0) {
+        const orgs = await Promise.all(
+          savedOrgIds.slice(0, 3).map(id => api.getOrganization(id).catch(() => null))
+        );
+        setSavedOrgs(orgs.filter(Boolean) as Organization[]);
       }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Replit + Expo</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          to see changes. Press{" "}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: "cmd + d",
-              android: "cmd + m",
-              web: "F12",
-            })}
-          </ThemedText>{" "}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">
-            npm run reset-project
-          </ThemedText>{" "}
-          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-          directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    } catch (error) {
+      console.error('Error loading data:', error);
+      Alert.alert('Connection Issue', 'Unable to load campaigns. Please check your connection.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const quickAmounts = [10, 25, 50, 100];
+
+  const handleQuickDonate = (amount: number) => {
+    setQuickDonateAmount(amount.toString());
+    router.push({
+      pathname: '/donate',
+      params: { amount: amount.toString() },
+    });
+  };
+
+  const handleCustomDonate = () => {
+    const amount = parseFloat(quickDonateAmount);
+    if (!amount || amount <= 0) {
+      Alert.alert('Error', 'Please enter a valid amount');
+      return;
+    }
+    router.push({
+      pathname: '/donate',
+      params: { amount: quickDonateAmount },
+    });
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.greeting}>Welcome back,</Text>
+        <Text style={styles.name}>{user?.firstName || 'Donor'}!</Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Quick Donate</Text>
+        <View style={styles.quickAmountGrid}>
+          {quickAmounts.map((amount) => (
+            <TouchableOpacity
+              key={amount}
+              style={styles.quickAmountButton}
+              onPress={() => handleQuickDonate(amount)}
+            >
+              <Text style={styles.quickAmountText}>${amount}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        
+        <View style={styles.customAmountContainer}>
+          <TextInput
+            style={styles.customAmountInput}
+            placeholder="Custom amount"
+            keyboardType="numeric"
+            value={quickDonateAmount}
+            onChangeText={setQuickDonateAmount}
+          />
+          <TouchableOpacity style={styles.donateButton} onPress={handleCustomDonate}>
+            <Text style={styles.donateButtonText}>Give</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {savedOrgs.length > 0 && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Saved Organizations</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {savedOrgs.map((org) => (
+            <TouchableOpacity
+              key={org.id}
+              style={styles.orgCard}
+              onPress={() => router.push({ pathname: '/donate', params: { organizationId: org.id.toString(), organizationName: org.name } })}
+            >
+              <View style={styles.orgIcon}>
+                <Text style={styles.orgIconText}>{org.name[0]}</Text>
+              </View>
+              <View style={styles.orgInfo}>
+                <Text style={styles.orgName}>{org.name}</Text>
+                <Text style={styles.orgLocation}>
+                  {org.city}, {org.state}
+                </Text>
+              </View>
+              <Text style={styles.orgArrow}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {featuredCampaigns.length > 0 && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Featured Campaigns</Text>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/campaigns')}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {featuredCampaigns.map((campaign) => {
+            const goal = parseFloat(campaign.goal || '0');
+            const raised = parseFloat(campaign.raised || '0');
+            const progress = goal > 0 ? (raised / goal) * 100 : 0;
+
+            return (
+              <TouchableOpacity
+                key={campaign.id}
+                style={styles.campaignCard}
+                onPress={() => router.push(`/campaign/${campaign.id}`)}
+              >
+                <Text style={styles.campaignName}>{campaign.name}</Text>
+                
+                {goal > 0 && (
+                  <>
+                    <View style={styles.progressBar}>
+                      <View style={[styles.progressFill, { width: `${Math.min(progress, 100)}%` }]} />
+                    </View>
+                    <View style={styles.statsRow}>
+                      <Text style={styles.raised}>${raised.toLocaleString()}</Text>
+                      <Text style={styles.goal}>of ${goal.toLocaleString()}</Text>
+                    </View>
+                  </>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+
+      <View style={styles.section}>
+        <TouchableOpacity
+          style={styles.qrButton}
+          onPress={() => Alert.alert('QR Scanner', 'QR code scanning feature coming soon!')}
+        >
+          <Text style={styles.qrButtonIcon}>📷</Text>
+          <Text style={styles.qrButtonText}>Scan QR Code to Donate</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
   },
-  stepContainer: {
-    gap: 8,
+  header: {
+    backgroundColor: '#0d72b9',
+    padding: 20,
+    paddingTop: 60,
+    paddingBottom: 32,
+  },
+  greeting: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  name: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  section: {
+    backgroundColor: '#fff',
+    marginTop: 16,
+    padding: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+  },
+  seeAllText: {
+    fontSize: 14,
+    color: '#0d72b9',
+    fontWeight: '600',
+  },
+  quickAmountGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  quickAmountButton: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  quickAmountText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#0d72b9',
+  },
+  customAmountContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  customAmountInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 16,
+    fontSize: 16,
+  },
+  donateButton: {
+    backgroundColor: '#0d72b9',
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  donateButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  orgCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
+  orgIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#e7f2fa',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  orgIconText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#0d72b9',
+  },
+  orgInfo: {
+    flex: 1,
+  },
+  orgName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  orgLocation: {
+    fontSize: 14,
+    color: '#666',
+  },
+  orgArrow: {
+    fontSize: 24,
+    color: '#ccc',
+  },
+  campaignCard: {
+    backgroundColor: '#f9f9f9',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  campaignName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    overflow: 'hidden',
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#26b578',
+    borderRadius: 4,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  raised: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#26b578',
+  },
+  goal: {
+    fontSize: 14,
+    color: '#666',
+  },
+  qrButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f9f9f9',
+    padding: 20,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#0d72b9',
+    borderStyle: 'dashed',
+  },
+  qrButtonIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  qrButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0d72b9',
   },
 });
