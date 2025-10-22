@@ -53,7 +53,15 @@ export default function ProfileScreen() {
           <TouchableOpacity
             key={index}
             style={styles.menuItem}
-            onPress={() => {}}
+            onPress={() => {
+              if (item.route === '/donations') {
+                router.push('/(tabs)/donations');
+              } else if (item.route) {
+                router.push(item.route as any);
+              } else {
+                Alert.alert('Coming Soon', `${item.title} feature is coming soon!`);
+              }
+            }}
           >
             <View style={styles.menuItemLeft}>
               <Text style={styles.menuItemIcon}>{item.icon}</Text>
