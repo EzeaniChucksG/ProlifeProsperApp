@@ -28,7 +28,10 @@ export default function LoginScreen() {
       router.replace('/(tabs)');
     } catch (error: any) {
       console.error('Login error:', error);
-      Alert.alert('Login Failed', error.message || 'Invalid credentials');
+      console.error('Error message:', error?.message);
+      console.error('Error name:', error?.name);
+      console.error('Error stack:', error?.stack);
+      Alert.alert('Login Failed', error.message || 'Network error - please check your connection');
     } finally {
       setIsLoading(false);
       console.log('Login attempt complete');

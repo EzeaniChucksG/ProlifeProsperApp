@@ -37,26 +37,38 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.authToken}`;
     }
 
-    console.log(`API Request: ${options.method || 'GET'} ${this.baseUrl}${endpoint}`);
+    const url = `${this.baseUrl}${endpoint}`;
+    console.log(`API Request: ${options.method || 'GET'} ${url}`);
+    console.log('Request headers:', headers);
     
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
 
-    console.log(`API Response: ${response.status} ${response.statusText}`);
+      console.log(`API Response: ${response.status} ${response.statusText}`);
 
-    if (!response.ok) {
-      const error: ApiError = await response.json().catch(() => ({
-        message: 'An error occurred',
-      }));
-      console.error('API Error:', error);
-      throw new Error(error.message || 'Request failed');
+      if (!response.ok) {
+        const error: ApiError = await response.json().catch(() => ({
+          message: 'An error occurred',
+        }));
+        console.error('API Error:', error);
+        throw new Error(error.message || 'Request failed');
+      }
+
+      const data = await response.json();
+      console.log('API Success:', data);
+      return data;
+    } catch (error: any) {
+      console.error('Fetch error occurred:', {
+        message: error.message,
+        name: error.name,
+        url: url,
+      });
+      // Re-throw with more context
+      throw new Error(`Network request failed: ${error.message}`);
     }
-
-    const data = await response.json();
-    console.log('API Success:', data);
-    return data;
   }
 
   // Auth endpoints
