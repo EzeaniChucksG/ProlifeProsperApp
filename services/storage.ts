@@ -59,6 +59,19 @@ export const storage = {
     );
   },
 
+  // Generic storage methods
+  async getItem(key: string): Promise<string | null> {
+    return AsyncStorage.getItem(key);
+  },
+
+  async setItem(key: string, value: string): Promise<void> {
+    await AsyncStorage.setItem(key, value);
+  },
+
+  async removeItem(key: string): Promise<void> {
+    await AsyncStorage.removeItem(key);
+  },
+
   // Clear all data
   async clearAll(): Promise<void> {
     await AsyncStorage.multiRemove([
