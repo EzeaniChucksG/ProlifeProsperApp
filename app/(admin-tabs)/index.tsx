@@ -181,9 +181,7 @@ export default function AdminDashboardScreen() {
           
           <TouchableOpacity
             style={styles.actionCard}
-            onPress={() => {
-              Alert.alert('Coming Soon', 'Receipt sending feature is under development.');
-            }}
+            onPress={() => router.push('/admin/send-receipt')}
           >
             <Ionicons name="mail-outline" size={32} color="#0d72b9" />
             <Text style={styles.actionText}>Send Receipt</Text>
