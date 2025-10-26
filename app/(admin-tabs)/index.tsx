@@ -173,9 +173,7 @@ export default function AdminDashboardScreen() {
           
           <TouchableOpacity
             style={styles.actionCard}
-            onPress={() => {
-              Alert.alert('Coming Soon', 'QR Code Generator feature is under development.');
-            }}
+            onPress={() => router.push('/admin/qr-generator')}
           >
             <Ionicons name="qr-code-outline" size={32} color="#0d72b9" />
             <Text style={styles.actionText}>Generate QR</Text>

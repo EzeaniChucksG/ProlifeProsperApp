@@ -29,7 +29,7 @@ export default function MoreScreen() {
     {
       section: 'Tools',
       items: [
-        { icon: 'qr-code-outline', label: 'QR Code Generator', comingSoon: true },
+        { icon: 'qr-code-outline', label: 'QR Code Generator', route: '/admin/qr-generator' },
         { icon: 'mail-outline', label: 'Send Receipts', comingSoon: true },
         { icon: 'chatbubbles-outline', label: 'Donor Messages', comingSoon: true },
         { icon: 'notifications-outline', label: 'Push Notifications', comingSoon: true },
@@ -82,7 +82,11 @@ export default function MoreScreen() {
               key={item.label}
               style={styles.menuItem}
               onPress={() => {
-                Alert.alert('Coming Soon', `${item.label} feature is under development.`);
+                if ((item as any).route) {
+                  router.push((item as any).route);
+                } else {
+                  Alert.alert('Coming Soon', `${item.label} feature is under development.`);
+                }
               }}
             >
               <View style={styles.menuItemLeft}>
