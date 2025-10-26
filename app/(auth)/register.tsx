@@ -1,17 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, View, Text, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { register as registerAction, clearError } from '@/store/slices/authSlice';
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { register } = useAuth();
+  const dispatch = useAppDispatch();
+  const { isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      Alert.alert('Registration Failed', error);
+      dispatch(clearError());
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated]);
 
   const handleRegister = async () => {
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
@@ -29,15 +43,8 @@ export default function RegisterScreen() {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      await register({ email, password, firstName, lastName });
-      router.replace('/(tabs)');
-    } catch (error: any) {
-      Alert.alert('Registration Failed', error.message || 'Could not create account');
-    } finally {
-      setIsLoading(false);
-    }
+    const name = `${firstName} ${lastName}`;
+    dispatch(registerAction({ name, email, password }));
   };
 
   return (

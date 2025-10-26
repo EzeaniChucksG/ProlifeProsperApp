@@ -1,9 +1,11 @@
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { logout } from '@/store/slices/authSlice';
 import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -16,7 +18,7 @@ export default function ProfileScreen() {
           text: 'Sign Out',
           style: 'destructive',
           onPress: async () => {
-            await logout();
+            await dispatch(logout());
             router.replace('/(auth)/login');
           },
         },
@@ -38,13 +40,13 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
-            {user?.firstName?.[0]}{user?.lastName?.[0]}
+            {user?.name?.[0] || 'U'}
           </Text>
         </View>
         <Text style={styles.name}>
-          {user?.firstName} {user?.lastName}
+          {user?.name || 'User'}
         </Text>
-        <Text style={styles.email}>{user?.email}</Text>
+        <Text style={styles.email}>{user?.email || ''}</Text>
       </View>
 
       <View style={styles.section}>

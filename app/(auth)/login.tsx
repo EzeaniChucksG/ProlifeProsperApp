@@ -1,41 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, TextInput, Pressable, View, Text, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { login as loginAction, clearError } from '@/store/slices/authSlice';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuth();
+  const dispatch = useAppDispatch();
+  const { isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      Alert.alert('Login Failed', error);
+      dispatch(clearError());
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated]);
 
   const handleLogin = async () => {
-    console.log('Login button clicked!', { email, password: '***' });
-    
     if (!email || !password) {
-      console.log('Validation failed: missing fields');
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
-    console.log('Starting login request...');
-    setIsLoading(true);
-    try {
-      console.log('Calling login API...');
-      await login({ email, password });
-      console.log('Login successful!');
-      router.replace('/(tabs)');
-    } catch (error: any) {
-      console.error('Login error:', error);
-      console.error('Error message:', error?.message);
-      console.error('Error name:', error?.name);
-      console.error('Error stack:', error?.stack);
-      Alert.alert('Login Failed', error.message || 'Network error - please check your connection');
-    } finally {
-      setIsLoading(false);
-      console.log('Login attempt complete');
-    }
+    dispatch(loginAction({ email, password }));
   };
 
   return (
