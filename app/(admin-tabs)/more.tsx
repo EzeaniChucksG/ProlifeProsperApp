@@ -31,7 +31,7 @@ export default function MoreScreen() {
       items: [
         { icon: 'qr-code-outline', label: 'QR Code Generator', route: '/admin/qr-generator' },
         { icon: 'mail-outline', label: 'Send Receipts', route: '/admin/send-receipt' },
-        { icon: 'chatbubbles-outline', label: 'Donor Messages', comingSoon: true },
+        { icon: 'chatbubbles-outline', label: 'Donor Messages', route: '/admin/donor-chat' },
         { icon: 'notifications-outline', label: 'Push Notifications', comingSoon: true },
       ],
     },

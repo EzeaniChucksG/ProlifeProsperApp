@@ -189,9 +189,7 @@ export default function AdminDashboardScreen() {
           
           <TouchableOpacity
             style={styles.actionCard}
-            onPress={() => {
-              Alert.alert('Coming Soon', 'Donor Chat feature is under development.');
-            }}
+            onPress={() => router.push('/admin/donor-chat')}
           >
             <Ionicons name="chatbubbles-outline" size={32} color="#0d72b9" />
             <Text style={styles.actionText}>Donor Chat</Text>
