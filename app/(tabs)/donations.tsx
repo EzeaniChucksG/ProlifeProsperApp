@@ -2,10 +2,10 @@ import { StyleSheet, View, Text, FlatList, TouchableOpacity, ActivityIndicator, 
 import { useState, useEffect } from 'react';
 import { api } from '@/services/api';
 import type { Donation } from '@/types/api';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAppSelector } from '@/store/hooks';
 
 export default function DonationsScreen() {
-  const { user } = useAuth();
+  const user = useAppSelector(state => state.auth.user);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'one_time' | 'recurring'>('all');

@@ -1,12 +1,12 @@
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
 import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAppSelector } from '@/store/hooks';
 import { api } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function DonateScreen() {
-  const { user } = useAuth();
+  const user = useAppSelector(state => state.auth.user);
   const router = useRouter();
   const { 
     campaignId, 

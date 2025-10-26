@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAppSelector } from '@/store/hooks';
 import { api } from '@/services/api';
 import { storage } from '@/services/storage';
 import type { Organization, Campaign } from '@/types/api';
@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router';
 import { calculateImpactStats } from '@/services/mockData';
 
 export default function HomeScreen() {
-  const { user } = useAuth();
+  const user = useAppSelector(state => state.auth.user);
   const router = useRouter();
   const [savedOrgs, setSavedOrgs] = useState<Organization[]>([]);
   const [featuredCampaigns, setFeaturedCampaigns] = useState<Campaign[]>([]);

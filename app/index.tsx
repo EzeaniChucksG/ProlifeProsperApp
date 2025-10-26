@@ -1,9 +1,9 @@
 import { Redirect } from 'expo-router';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAppSelector } from '@/store/hooks';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 export default function Index() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAppSelector(state => state.auth);
 
   if (isLoading) {
     return (
