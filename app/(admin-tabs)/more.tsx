@@ -32,7 +32,7 @@ export default function MoreScreen() {
         { icon: 'qr-code-outline', label: 'QR Code Generator', route: '/admin/qr-generator' },
         { icon: 'mail-outline', label: 'Send Receipts', route: '/admin/send-receipt' },
         { icon: 'chatbubbles-outline', label: 'Donor Messages', route: '/admin/donor-chat' },
-        { icon: 'notifications-outline', label: 'Push Notifications', comingSoon: true },
+        { icon: 'notifications-outline', label: 'Push Notifications', route: '/admin/push-notifications' },
       ],
     },
     {
