@@ -1,13 +1,17 @@
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppSelector } from '@/store/hooks';
-import { api } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
+import { useGettrxConfig } from '@/hooks/useGettrxConfig';
+import { GettrxPaymentForm, GettrxPaymentFormRef } from '@/components/GettrxPaymentForm';
+import { Config } from '@/constants/Config';
 
 export default function DonateScreen() {
   const user = useAppSelector(state => state.auth.user);
   const router = useRouter();
+  const paymentFormRef = useRef<GettrxPaymentFormRef>(null);
+  
   const { 
     campaignId, 
     campaignName, 
@@ -22,46 +26,71 @@ export default function DonateScreen() {
     amount?: string;
   }>();
 
+  const targetOrgId = organizationId ? parseInt(organizationId) : 1;
+  
+  const { config, loading: configLoading, error: configError } = useGettrxConfig(targetOrgId);
+
   const [amount, setAmount] = useState(presetAmount || '');
   const [isRecurring, setIsRecurring] = useState(false);
-  const [frequency, setFrequency] = useState('monthly');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'apple_pay' | 'google_pay'>('card');
+  const [frequency, setFrequency] = useState<'monthly' | 'quarterly' | 'annually'>('monthly');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentToken, setPaymentToken] = useState<string | null>(null);
 
   const presetAmounts = [25, 50, 100, 250];
 
-  const handleDonate = async () => {
-    const donationAmount = parseFloat(amount);
-    
-    if (!donationAmount || donationAmount <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
-      return;
-    }
+  const handleTokenReceived = (token: string) => {
+    console.log('Payment token received from GETTRX');
+    setPaymentToken(token);
+    processPayment(token);
+  };
 
-    if (!user?.email) {
+  const handlePaymentError = (error: string) => {
+    console.error('Payment form error:', error);
+    Alert.alert('Payment Error', error);
+    setIsSubmitting(false);
+  };
+
+  const processPayment = async (token: string) => {
+    if (!user) {
       Alert.alert('Error', 'Please sign in to donate');
       return;
     }
 
     try {
       setIsSubmitting(true);
-      
-      const targetOrgId = organizationId 
-        ? parseInt(organizationId) 
-        : (user.organizationId || 1);
 
-      await api.createDonation({
-        amount: donationAmount,
-        currency: 'usd',
-        donorEmail: user.email,
-        donorFirstName: user.firstName || '',
-        donorLastName: user.lastName || '',
-        organizationId: targetOrgId,
-        campaignId: campaignId ? parseInt(campaignId) : undefined,
-        paymentMethod: paymentMethod,
-        recurringFrequency: isRecurring ? frequency : undefined,
-        isAnonymous: false,
+      const donationAmount = parseFloat(amount);
+      
+      const response = await fetch(`${Config.API_BASE_URL}/gettrx/process-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentToken: token,
+          amount: donationAmount,
+          organizationId: targetOrgId,
+          campaignId: campaignId ? parseInt(campaignId) : undefined,
+          donorInfo: {
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
+            email: user.email || '',
+          },
+          anonymous: false,
+          savePaymentMethod: isRecurring,
+          setupFutureUsage: isRecurring ? 'off_session' : undefined,
+          donationType: isRecurring ? 'recurring' : 'one-time',
+          recurringInterval: isRecurring ? frequency : undefined,
+        }),
       });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Payment failed');
+      }
+
+      console.log('Payment successful:', result);
 
       Alert.alert(
         'Success!',
@@ -74,18 +103,68 @@ export default function DonateScreen() {
         ]
       );
     } catch (error: any) {
-      console.error('Donation error:', error);
-      Alert.alert('Error', error.message || 'Failed to process donation');
+      console.error('Payment processing error:', error);
+      Alert.alert('Payment Failed', error.message || 'Failed to process donation. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleDonate = () => {
+    const donationAmount = parseFloat(amount);
+    
+    if (!donationAmount || donationAmount <= 0) {
+      Alert.alert('Error', 'Please enter a valid amount');
+      return;
+    }
+
+    if (!user?.email) {
+      Alert.alert('Error', 'Please sign in to donate');
+      return;
+    }
+
+    if (!config) {
+      Alert.alert('Error', 'Payment system not ready. Please try again.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    if (paymentFormRef.current) {
+      paymentFormRef.current.createToken();
+    } else {
+      Alert.alert('Error', 'Payment form not ready');
+      setIsSubmitting(false);
+    }
+  };
+
+  if (configLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0d72b9" />
+        <Text style={styles.loadingText}>Loading payment system...</Text>
+      </View>
+    );
+  }
+
+  if (configError) {
+    return (
+      <View style={styles.errorContainer}>
+        <Ionicons name="alert-circle-outline" size={64} color="#dc3545" />
+        <Text style={styles.errorTitle}>Payment System Error</Text>
+        <Text style={styles.errorMessage}>{configError}</Text>
+        <TouchableOpacity style={styles.backButton2} onPress={() => router.back()}>
+          <Text style={styles.backButtonText2}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>←</Text>
+          <Text style={styles.backButtonTextHeader}>←</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Make a Donation</Text>
       </View>
@@ -111,6 +190,7 @@ export default function DonateScreen() {
                 amount === preset.toString() && styles.presetButtonActive,
               ]}
               onPress={() => setAmount(preset.toString())}
+              disabled={isSubmitting}
             >
               <Text
                 style={[
@@ -130,6 +210,7 @@ export default function DonateScreen() {
           keyboardType="numeric"
           value={amount}
           onChangeText={setAmount}
+          editable={!isSubmitting}
         />
       </View>
 
@@ -139,6 +220,7 @@ export default function DonateScreen() {
         <TouchableOpacity
           style={[styles.typeButton, !isRecurring && styles.typeButtonActive]}
           onPress={() => setIsRecurring(false)}
+          disabled={isSubmitting}
         >
           <Text style={[styles.typeButtonText, !isRecurring && styles.typeButtonTextActive]}>
             One-Time Donation
@@ -148,6 +230,7 @@ export default function DonateScreen() {
         <TouchableOpacity
           style={[styles.typeButton, isRecurring && styles.typeButtonActive]}
           onPress={() => setIsRecurring(true)}
+          disabled={isSubmitting}
         >
           <Text style={[styles.typeButtonText, isRecurring && styles.typeButtonTextActive]}>
             Recurring Donation
@@ -156,7 +239,7 @@ export default function DonateScreen() {
 
         {isRecurring && (
           <View style={styles.frequencyContainer}>
-            {['monthly', 'quarterly', 'annually'].map((freq) => (
+            {(['monthly', 'quarterly', 'annually'] as const).map((freq) => (
               <TouchableOpacity
                 key={freq}
                 style={[
@@ -164,6 +247,7 @@ export default function DonateScreen() {
                   frequency === freq && styles.frequencyButtonActive,
                 ]}
                 onPress={() => setFrequency(freq)}
+                disabled={isSubmitting}
               >
                 <Text
                   style={[
@@ -180,52 +264,25 @@ export default function DonateScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Payment Method</Text>
+        <Text style={styles.sectionTitle}>Payment Information</Text>
+        <Text style={styles.sectionSubtitle}>Enter your card details securely</Text>
         
-        {Platform.OS === 'ios' && (
-          <TouchableOpacity
-            style={[
-              styles.paymentMethodButton,
-              styles.applePayButton,
-              paymentMethod === 'apple_pay' && styles.paymentMethodActive,
-            ]}
-            onPress={() => setPaymentMethod('apple_pay')}
-          >
-            <Ionicons name="logo-apple" size={24} color="#000" />
-            <Text style={styles.applePayText}>Pay</Text>
-          </TouchableOpacity>
+        {config && (
+          <GettrxPaymentForm
+            ref={paymentFormRef}
+            publishableKey={config.publishableKey}
+            accountId={config.accountId}
+            amount={parseFloat(amount) || 0}
+            onToken={handleTokenReceived}
+            onError={handlePaymentError}
+            donationType={isRecurring ? 'recurring' : 'one-time'}
+          />
         )}
 
-        {Platform.OS === 'android' && (
-          <TouchableOpacity
-            style={[
-              styles.paymentMethodButton,
-              styles.googlePayButton,
-              paymentMethod === 'google_pay' && styles.paymentMethodActive,
-            ]}
-            onPress={() => setPaymentMethod('google_pay')}
-          >
-            <Ionicons name="logo-google" size={20} color="#fff" />
-            <Text style={styles.googlePayText}>Google Pay</Text>
-          </TouchableOpacity>
-        )}
-
-        <TouchableOpacity
-          style={[
-            styles.paymentMethodButton,
-            styles.cardButton,
-            paymentMethod === 'card' && styles.paymentMethodActive,
-          ]}
-          onPress={() => setPaymentMethod('card')}
-        >
-          <Ionicons name="card-outline" size={24} color="#0d72b9" />
-          <Text style={styles.cardButtonText}>Credit or Debit Card</Text>
-        </TouchableOpacity>
-
-        <View style={styles.paymentNote}>
+        <View style={styles.securityNote}>
           <Ionicons name="lock-closed-outline" size={16} color="#26b578" />
-          <Text style={styles.paymentNoteText}>
-            Secure, encrypted payment processing
+          <Text style={styles.securityNoteText}>
+            Secure, encrypted payment processing via GETTRX
           </Text>
         </View>
       </View>
@@ -254,6 +311,48 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+    backgroundColor: '#f5f5f5',
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 16,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  backButton2: {
+    marginTop: 24,
+    backgroundColor: '#0d72b9',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  backButtonText2: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -266,7 +365,7 @@ const styles = StyleSheet.create({
   backButton: {
     marginRight: 16,
   },
-  backButtonText: {
+  backButtonTextHeader: {
     fontSize: 28,
     color: '#0d72b9',
   },
@@ -299,6 +398,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 16,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+    marginTop: -8,
   },
   presetGrid: {
     flexDirection: 'row',
@@ -381,6 +486,17 @@ const styles = StyleSheet.create({
   frequencyButtonTextActive: {
     color: '#fff',
   },
+  securityNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  securityNoteText: {
+    fontSize: 13,
+    color: '#666',
+    marginLeft: 6,
+  },
   footer: {
     padding: 20,
     marginTop: 16,
@@ -398,59 +514,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
-  },
-  paymentMethodButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#ddd',
-  },
-  paymentMethodActive: {
-    borderColor: '#0d72b9',
-    backgroundColor: '#e7f2fa',
-  },
-  applePayButton: {
-    backgroundColor: '#fff',
-    borderColor: '#000',
-  },
-  applePayText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
-    marginLeft: 8,
-  },
-  googlePayButton: {
-    backgroundColor: '#4285F4',
-    borderColor: '#4285F4',
-  },
-  googlePayText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    marginLeft: 8,
-  },
-  cardButton: {
-    backgroundColor: '#fff',
-  },
-  cardButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0d72b9',
-    marginLeft: 12,
-  },
-  paymentNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  paymentNoteText: {
-    fontSize: 13,
-    color: '#666',
-    marginLeft: 6,
   },
 });

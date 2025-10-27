@@ -3,8 +3,29 @@
 ## Overview
 Donor-facing mobile application built with Expo/React Native for ProLifeProsper, a nonprofit donation platform. Enables donors to browse campaigns, make one-time or recurring donations, view donation history, and manage saved organizations.
 
-**Project Status:** Phase 1 MVP Complete + Phase 2 Admin App Started (October 22, 2025)
+**Project Status:** Phase 1 MVP Complete + Phase 2 Admin App Complete + GETTRX Payment Integration ✅
 **Backend API:** https://3fdd1b5d-bf9f-479f-a189-ae81cc75d815-00-3rf10jd7rr2hm.kirk.replit.dev/api (development)
+
+## Recent Changes (October 27, 2025)
+
+### GETTRX Payment Integration ✅
+- **Real Payment Processing**: Integrated GETTRX payment SDK for live donation processing
+  - WebView-based implementation (GETTRX doesn't have native React Native SDK)
+  - PCI-compliant client-side tokenization (card data never touches backend)
+  - Connects to production backend endpoints:
+    - `GET /api/gettrx/payment-config/:organizationId` - Fetch publishable key & account ID
+    - `POST /api/gettrx/process-payment` - Process payment with token
+- **Payment Form Components**:
+  - `GettrxPaymentForm.tsx` - Secure WebView-based payment form with forwardRef
+  - `useGettrxConfig.ts` - Hook to fetch GETTRX configuration from backend
+- **Donation Flow Updates**:
+  - Replaced mock payment with real GETTRX integration in `app/donate.tsx`
+  - Supports one-time and recurring donations (monthly, quarterly, annually)
+  - Automatic payment method saving for recurring donations
+  - Real-time payment processing with success/error handling
+  - Loading states and error handling throughout payment flow
+- **Security**: All card data tokenized client-side via GETTRX SDK, only payment tokens sent to backend
+- **Dependencies**: Added `react-native-webview` for GETTRX SDK integration
 
 ## Recent Changes (October 22, 2025)
 
