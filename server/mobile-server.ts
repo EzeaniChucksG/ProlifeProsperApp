@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 import ws from 'ws';
 import * as schema from '../shared/schema';
 import { eq } from 'drizzle-orm';
+import { registerGettrxPaymentRoutes } from './routes/gettrx-payment-routes';
 
 neonConfig.webSocketConstructor = ws;
 
@@ -311,6 +312,9 @@ app.post('/api/auth/admin/login', async (req, res) => {
     res.status(500).json({ message: 'Admin login failed' });
   }
 });
+
+// Register GETTRX payment routes
+registerGettrxPaymentRoutes(app);
 
 // Health check
 app.get('/health', (req, res) => {
