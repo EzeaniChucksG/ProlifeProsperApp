@@ -43,8 +43,7 @@ export default function RegisterScreen() {
       return;
     }
 
-    const name = `${firstName} ${lastName}`;
-    dispatch(registerAction({ name, email, password }));
+    dispatch(registerAction({ firstName, lastName, email, password }));
   };
 
   return (

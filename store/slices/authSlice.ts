@@ -46,13 +46,13 @@ export const login = createAsyncThunk(
 export const register = createAsyncThunk(
   'auth/register',
   async (
-    { name, email, password }: { name: string; email: string; password: string },
+    { firstName, lastName, email, password }: { firstName: string; lastName: string; email: string; password: string },
     { rejectWithValue }
   ) => {
     try {
       const response = await apiClient.post<{ user: User; token: string }>(
         '/auth/register',
-        { name, email, password },
+        { firstName, lastName, email, password },
         false
       );
       

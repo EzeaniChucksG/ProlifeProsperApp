@@ -32,14 +32,14 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
 
 // Helper: Generate JWT
-function generateToken(userId: number): string {
+function generateToken(userId: string): string {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '30d' });
 }
 
 // Helper: Verify JWT
-function verifyToken(token: string): { userId: number } | null {
+function verifyToken(token: string): { userId: string } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { userId: number };
+    return jwt.verify(token, JWT_SECRET) as { userId: string };
   } catch {
     return null;
   }
@@ -69,7 +69,7 @@ function authMiddleware(req: any, res: any, next: any) {
 
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { firstName, lastName, email, password } = req.body;
 
     // Check if user exists
     const existingUser = await db.query.users.findFirst({
@@ -81,19 +81,28 @@ app.post('/api/auth/register', async (req, res) => {
     }
 
     // Hash password
-    const passwordHash = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
     const [user] = await db.insert(schema.users).values({
-      name,
+      firstName: firstName || '',
+      lastName: lastName || '',
       email,
-      passwordHash,
+      hashedPassword,
       role: 'donor',
     }).returning();
 
     const token = generateToken(user.id);
 
-    res.json({ user: { id: user.id, name: user.name, email: user.email }, token });
+    res.json({ 
+      user: { 
+        id: user.id, 
+        firstName: user.firstName, 
+        lastName: user.lastName, 
+        email: user.email 
+      }, 
+      token 
+    });
   } catch (error: any) {
     console.error('Register error:', error);
     res.status(500).json({ message: error.message || 'Registration failed' });
@@ -108,18 +117,26 @@ app.post('/api/auth/login', async (req, res) => {
       where: eq(schema.users.email, email),
     });
 
-    if (!user || !user.passwordHash) {
+    if (!user || !user.hashedPassword) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const isValid = await bcrypt.compare(password, user.passwordHash);
+    const isValid = await bcrypt.compare(password, user.hashedPassword);
     if (!isValid) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     const token = generateToken(user.id);
 
-    res.json({ user: { id: user.id, name: user.name, email: user.email }, token });
+    res.json({ 
+      user: { 
+        id: user.id, 
+        firstName: user.firstName, 
+        lastName: user.lastName, 
+        email: user.email 
+      }, 
+      token 
+    });
   } catch (error: any) {
     console.error('Login error:', error);
     res.status(500).json({ message: error.message || 'Login failed' });
@@ -269,18 +286,26 @@ app.post('/api/auth/admin/login', async (req, res) => {
       where: eq(schema.users.email, email),
     });
 
-    if (!user || !user.passwordHash || user.role === 'donor') {
+    if (!user || !user.hashedPassword || user.role === 'donor') {
       return res.status(401).json({ message: 'Invalid admin credentials' });
     }
 
-    const isValid = await bcrypt.compare(password, user.passwordHash);
+    const isValid = await bcrypt.compare(password, user.hashedPassword);
     if (!isValid) {
       return res.status(401).json({ message: 'Invalid admin credentials' });
     }
 
     const token = generateToken(user.id);
 
-    res.json({ user: { id: user.id, name: user.name, email: user.email }, token });
+    res.json({ 
+      user: { 
+        id: user.id, 
+        firstName: user.firstName, 
+        lastName: user.lastName, 
+        email: user.email 
+      }, 
+      token 
+    });
   } catch (error: any) {
     console.error('Admin login error:', error);
     res.status(500).json({ message: 'Admin login failed' });
