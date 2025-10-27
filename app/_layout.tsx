@@ -34,10 +34,14 @@ function RootLayoutNav() {
     const inAdminAuthGroup = segments[0] === '(admin-auth)';
     const inTabsGroup = segments[0] === '(tabs)';
     const inAdminTabsGroup = segments[0] === '(admin-tabs)';
+    
+    // Standalone authenticated screens that shouldn't redirect
+    const standaloneScreens = ['donate', 'campaign', 'scan', 'payment-methods', 'notifications', 'admin'];
+    const isStandaloneScreen = standaloneScreens.includes(segments[0] || '');
 
     if (!isAuthenticated && !inAuthGroup && !inAdminAuthGroup) {
       router.replace('/(auth)/login');
-    } else if (isAuthenticated && !inTabsGroup && !inAdminTabsGroup && !inAuthGroup && !inAdminAuthGroup) {
+    } else if (isAuthenticated && !inTabsGroup && !inAdminTabsGroup && !inAuthGroup && !inAdminAuthGroup && !isStandaloneScreen) {
       router.replace('/(tabs)');
     }
   }, [isAuthenticated, authLoaded, segments]);
