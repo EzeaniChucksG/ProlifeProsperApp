@@ -87,8 +87,23 @@ export const GettrxPaymentForm = forwardRef<GettrxPaymentFormRef, GettrxPaymentF
         </div>
         
         <script>
+          // Set a timeout for SDK loading
+          let sdkLoadTimeout = setTimeout(() => {
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'error',
+              message: 'GETTRX SDK failed to load. Please check your internet connection.'
+            }));
+          }, 10000); // 10 second timeout
+          
           (async function() {
             try {
+              // Check if GETTRX SDK loaded
+              if (typeof GettrxOne === 'undefined') {
+                throw new Error('GETTRX SDK not loaded');
+              }
+              
+              clearTimeout(sdkLoadTimeout);
+              
               // Initialize GETTRX One
               const gettrx = new GettrxOne('${publishableKey}', {
                 onBehalfOf: '${accountId}'
@@ -197,7 +212,8 @@ export const GettrxPaymentForm = forwardRef<GettrxPaymentFormRef, GettrxPaymentF
 
           case 'TOKEN_ERROR':
           case 'INIT_ERROR':
-            onError(data.error || 'Payment system error');
+          case 'error':
+            onError(data.error || data.message || 'Payment system error');
             break;
 
           default:
