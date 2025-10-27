@@ -34,7 +34,8 @@ export default function LoginScreen() {
     }
 
     console.log('Dispatching login action...');
-    dispatch(loginAction({ email, password }));
+    const result = await dispatch(loginAction({ email, password }));
+    console.log('Login action result:', result);
   };
 
   return (
