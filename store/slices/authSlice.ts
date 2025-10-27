@@ -27,17 +27,22 @@ export const login = createAsyncThunk(
   'auth/login',
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
+      console.log('Login thunk: calling API...');
       const response = await apiClient.post<{ user: User; token: string }>(
         '/auth/login',
         { email, password },
         false
       );
       
+      console.log('Login thunk: API response received:', { hasUser: !!response.user, hasToken: !!response.token });
+      
       await storage.setAuthToken(response.token);
       await storage.setUserData(response.user);
       
+      console.log('Login thunk: storage updated, returning response');
       return response;
     } catch (error: any) {
+      console.error('Login thunk: error caught:', error);
       return rejectWithValue(error.message || 'Login failed');
     }
   }
