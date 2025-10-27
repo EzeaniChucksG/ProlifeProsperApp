@@ -60,4 +60,11 @@ export const Config = {
   // App Configuration
   APP_NAME: 'ProLifeProsper',
   DEFAULT_ORGANIZATION_ID: 1,
+  
+  // AsyncStorage Keys
+  STORAGE_KEYS: {
+    AUTH_TOKEN: '@prolifeprosper:auth_token',
+    USER_DATA: '@prolifeprosper:user_data',
+    SAVED_ORGS: '@prolifeprosper:saved_orgs',
+  },
 };
