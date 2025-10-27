@@ -8,22 +8,12 @@ export default function ProfileScreen() {
   const { user } = useAppSelector((state) => state.auth);
   const router = useRouter();
 
-  const handleLogout = async () => {
-    Alert.alert(
-      'Confirm Logout',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            await dispatch(logout());
-            router.replace('/(auth)/login');
-          },
-        },
-      ]
-    );
+  const handleLogout = () => {
+    dispatch(logout()).unwrap().then(() => {
+      router.replace('/(auth)/login');
+    }).catch((error) => {
+      console.error('Logout failed:', error);
+    });
   };
 
   const menuItems = [
@@ -40,11 +30,13 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
-            {user?.name?.[0] || 'U'}
+            {user?.firstName?.[0] || user?.email?.[0] || 'U'}
           </Text>
         </View>
         <Text style={styles.name}>
-          {user?.name || 'User'}
+          {user?.firstName && user?.lastName 
+            ? `${user.firstName} ${user.lastName}` 
+            : user?.email || 'User'}
         </Text>
         <Text style={styles.email}>{user?.email || ''}</Text>
       </View>
