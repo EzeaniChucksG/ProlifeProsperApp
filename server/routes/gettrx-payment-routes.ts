@@ -56,13 +56,36 @@ export function registerGettrxPaymentRoutes(app: Express): void {
         });
       }
 
-      // For development: Return GETTRX sandbox configuration
+      // Get organization from database
+      const organization = await storage.getOrganizationById(organizationId);
+      if (!organization) {
+        return res.status(404).json({
+          success: false,
+          message: "Organization not found",
+        });
+      }
+
+      // Get the merchant account ID (either from org or from approved application)
+      let merchantAccountId = organization.merchantAccountId;
+
+      // If not set in organization, try to get from latest approved application
+      if (!merchantAccountId) {
+        const applications = await storage.getGettrxMerchantApplications(organizationId);
+        const approvedApp = applications.find((app) => app.status === "approved");
+        if (approvedApp?.gettrxAccountId) {
+          merchantAccountId = approvedApp.gettrxAccountId;
+          console.log(`Using account ID from application for org ${organizationId}: ${merchantAccountId}`);
+        }
+      }
+
+      // For development: Use sandbox credentials if no merchant account
       const publishableKey = process.env.GETTRX_PUBLISHABLE_KEY || 'pk_sandbox_test_key';
-      const accountId = process.env.GETTRX_ACCOUNT_ID || 'acc_sandbox_test';
+      const accountId = merchantAccountId || process.env.GETTRX_ACCOUNT_ID || 'acc_sandbox_test';
 
       console.log(`📦 Fetching GETTRX config for organization ${organizationId}`);
       console.log(`🔑 Using publishable key: ${publishableKey.substring(0, 20)}...`);
       console.log(`🏦 Using account ID: ${accountId}`);
+      console.log(`🏛️ Merchant status: ${organization.merchantStatus}`);
 
       // Return payment configuration
       res.json({
