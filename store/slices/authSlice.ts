@@ -29,7 +29,7 @@ export const login = createAsyncThunk(
     try {
       console.log('Login thunk: calling API...');
       const response = await apiClient.post<{ user: User; token: string }>(
-        '/auth/login',
+        '/auth/signin',
         { email, password },
         false
       );
