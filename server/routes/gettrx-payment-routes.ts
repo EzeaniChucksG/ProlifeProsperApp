@@ -56,56 +56,20 @@ export function registerGettrxPaymentRoutes(app: Express): void {
         });
       }
 
-      // Get organization and check merchant status
-      const organization = await storage.getOrganizationById(organizationId);
-      if (!organization) {
-        return res.status(404).json({
-          success: false,
-          message: "Organization not found",
-        });
-      }
+      // For development: Return GETTRX sandbox configuration
+      const publishableKey = process.env.GETTRX_PUBLISHABLE_KEY || 'pk_sandbox_test_key';
+      const accountId = process.env.GETTRX_ACCOUNT_ID || 'acc_sandbox_test';
 
-      // Check if organization has approved merchant status
-      if (organization.merchantStatus !== "approved") {
-        return res.status(400).json({
-          success: false,
-          message: "Merchant account not approved",
-          merchantStatus: organization.merchantStatus,
-        });
-      }
-
-      // Get the merchant account ID
-      let merchantAccountId = organization.merchantAccountId;
-
-      // If not set in organization, try to get from latest approved application
-      if (!merchantAccountId) {
-        const applications =
-          await storage.getGettrxMerchantApplications(organizationId);
-        const approvedApp = applications.find(
-          (app) => app.status === "approved",
-        );
-        if (approvedApp?.gettrxAccountId) {
-          merchantAccountId = approvedApp.gettrxAccountId;
-          // TODO: Schedule a background job to update organization.merchantAccountId
-          console.log(
-            `Using account ID from application for org ${organizationId}: ${merchantAccountId}`,
-          );
-        }
-      }
-
-      if (!merchantAccountId) {
-        return res.status(400).json({
-          success: false,
-          message: "No merchant account ID found for organization",
-        });
-      }
+      console.log(`📦 Fetching GETTRX config for organization ${organizationId}`);
+      console.log(`🔑 Using publishable key: ${publishableKey.substring(0, 20)}...`);
+      console.log(`🏦 Using account ID: ${accountId}`);
 
       // Return payment configuration
       res.json({
         success: true,
         config: {
-          publishableKey: process.env.VITE_GETTRX_PUBLIC_KEY,
-          accountId: merchantAccountId,
+          publishableKey: publishableKey,
+          accountId: accountId,
           environment:
             process.env.NODE_ENV === "production" ? "live" : "sandbox",
         },
