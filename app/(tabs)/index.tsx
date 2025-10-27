@@ -184,7 +184,11 @@ export default function HomeScreen() {
               <TouchableOpacity
                 key={campaign.id}
                 style={styles.campaignCard}
-                onPress={() => router.push(`/campaign/${campaign.id}`)}
+                onPress={() => {
+                  console.log('Campaign clicked:', campaign.id, campaign.name);
+                  router.push(`/campaign/${campaign.id}`);
+                }}
+                activeOpacity={0.7}
               >
                 <Text style={styles.campaignName}>{campaign.name}</Text>
                 
@@ -199,6 +203,24 @@ export default function HomeScreen() {
                     </View>
                   </>
                 )}
+                
+                <TouchableOpacity
+                  style={styles.campaignDonateButton}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    console.log('Donate button clicked for campaign:', campaign.id);
+                    router.push({
+                      pathname: '/donate',
+                      params: {
+                        campaignId: campaign.id.toString(),
+                        campaignName: campaign.name,
+                        organizationId: campaign.organizationId?.toString(),
+                      },
+                    });
+                  }}
+                >
+                  <Text style={styles.campaignDonateButtonText}>Donate</Text>
+                </TouchableOpacity>
               </TouchableOpacity>
             );
           })}
@@ -351,6 +373,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 12,
+  },
+  campaignDonateButton: {
+    backgroundColor: '#0d72b9',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  campaignDonateButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   progressBar: {
     height: 8,

@@ -20,9 +20,10 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (isAuthenticated) {
+      console.log('User authenticated, navigating to tabs...');
       router.replace('/(tabs)');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
 
   const handleLogin = async () => {
     if (!email || !password) {
