@@ -26,11 +26,13 @@ export default function LoginScreen() {
   }, [isAuthenticated, router]);
 
   const handleLogin = async () => {
+    console.log('handleLogin called with:', { email: email.substring(0, 3) + '***', password: '***' });
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
+    console.log('Dispatching login action...');
     dispatch(loginAction({ email, password }));
   };
 
@@ -69,10 +71,7 @@ export default function LoginScreen() {
               isLoading && styles.buttonDisabled,
               pressed && styles.buttonPressed
             ]}
-            onPress={() => {
-              console.log('Sign In button pressed');
-              handleLogin();
-            }}
+            onPress={handleLogin}
             disabled={isLoading}
           >
             {isLoading ? (
