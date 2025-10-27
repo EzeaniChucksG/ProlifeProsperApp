@@ -124,11 +124,13 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(login.fulfilled, (state, action: PayloadAction<{ user: User; token: string }>) => {
+        console.log('Login fulfilled with payload:', { user: action.payload.user?.email, hasToken: !!action.payload.token });
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.error = null;
+        console.log('Auth state updated:', { isAuthenticated: state.isAuthenticated, user: state.user?.email });
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;

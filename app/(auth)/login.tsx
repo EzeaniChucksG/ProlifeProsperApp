@@ -7,7 +7,7 @@ import { login as loginAction, clearError } from '@/store/slices/authSlice';
 export default function LoginScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isLoading, error, isAuthenticated, user } = useAppSelector((state) => state.auth);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -19,11 +19,12 @@ export default function LoginScreen() {
   }, [error]);
 
   useEffect(() => {
+    console.log('Auth state changed:', { isAuthenticated, user: user?.email, isLoading });
     if (isAuthenticated) {
       console.log('User authenticated, navigating to tabs...');
       router.replace('/(tabs)');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, user, isLoading, router]);
 
   const handleLogin = async () => {
     console.log('handleLogin called with:', { email: email.substring(0, 3) + '***', password: '***' });
