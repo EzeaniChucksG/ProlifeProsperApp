@@ -1,6 +1,23 @@
-// Backend API URL configuration
-// Using local server from /server folder
-const API_BASE_URL = 'http://localhost:3000/api';
+// Backend API URL configuration  
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    
+    // For Replit environment, backend is on port 3000
+    if (hostname.includes('replit') || hostname.includes('janeway')) {
+      // Backend is accessible on same domain but port 3000
+      return `${protocol}//${hostname}:3000/api`;
+    }
+    
+    // For local development
+    return 'http://localhost:3000/api';
+  }
+  
+  return 'http://localhost:3000/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const Config = {
   API_BASE_URL,
