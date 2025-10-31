@@ -379,7 +379,7 @@ export class SendGridService {
       .replace(/[^a-z0-9]/g, '')
       .substring(0, 20); // Limit length
     
-    return `${emailPrefix}@prolifepayments.com`;
+    return `${emailPrefix}@prolifegive.com`;
   }
 }
 

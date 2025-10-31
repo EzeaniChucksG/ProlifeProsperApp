@@ -59,7 +59,7 @@ export class ReceiptService {
       // Send receipt email
       const emailResult = await SendGridService.sendEmail({
         to: receiptData.donorEmail,
-        from: organization.email || 'receipts@prolifepayments.com',
+        from: organization.email || 'receipts@prolifegive.com',
         fromName: organization.name,
         subject: `Your donation receipt - ${organization.name}`,
         html: receiptHtml,
@@ -102,7 +102,7 @@ export class ReceiptService {
       // Send thank-you email
       const emailResult = await SendGridService.sendEmail({
         to: receiptData.donorEmail,
-        from: organization.email || 'thankyou@prolifepayments.com',
+        from: organization.email || 'thankyou@prolifegive.com',
         fromName: organization.name,
         subject: `Thank you for your generous donation - ${organization.name}`,
         html: thankYouHtml,
@@ -542,7 +542,7 @@ This email was sent because you made a donation to ${org.name}. We respect your 
 
     await SendGridService.sendEmail({
       to: data.dedicationInfo.recipientEmail,
-      from: org.email || 'notifications@prolifepayments.com',
+      from: org.email || 'notifications@prolifegive.com',
       fromName: org.name,
       subject: `A donation has been made in your ${data.dedicationType} - ${org.name}`,
       html: dedicationHtml,

@@ -2572,7 +2572,7 @@ export const sendgridEmailCampaigns = pgTable(
       .references(() => organizations.id),
     name: varchar("name", { length: 255 }).notNull(),
     subject: varchar("subject", { length: 255 }).notNull(),
-    fromEmail: varchar("from_email", { length: 255 }).notNull(), // e.g., gracechurch@prolifepayments.com
+    fromEmail: varchar("from_email", { length: 255 }).notNull(), // e.g., gracechurch@prolifegive.com
     fromName: varchar("from_name", { length: 255 }).notNull(),
     replyTo: varchar("reply_to", { length: 255 }),
     htmlContent: text("html_content"),

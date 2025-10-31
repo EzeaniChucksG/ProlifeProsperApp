@@ -45,7 +45,7 @@ export async function setupSocialAuth(app: Express) {
             // Admin detection logic - could be based on email domain or specific emails
             if (
               email.includes("@prolifeprosper.com") ||
-              email.includes("@prolifepayments.com")
+              email.includes("@prolifegive.com")
             ) {
               const defaultAdminOrg =
                 await storage.getDefaultAdminOrganization();
@@ -102,7 +102,7 @@ export async function setupSocialAuth(app: Express) {
             // Admin detection logic - could be based on email domain or specific emails
             if (
               email.includes("@prolifeprosper.com") ||
-              email.includes("@prolifepayments.com")
+              email.includes("@prolifegive.com")
             ) {
               const defaultAdminOrg =
                 await storage.getDefaultAdminOrganization();
