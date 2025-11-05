@@ -1,12 +1,14 @@
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { mockDonations, mockCampaigns } from '@/services/mockData';
 import { useRouter } from 'expo-router';
+import { api } from '@/services/api';
+import { getAdminOrganizationId } from '@/services/adminAuth';
 
 export default function AdminDashboardScreen() {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     todayDonations: 0,
     todayAmount: 0,
@@ -15,51 +17,85 @@ export default function AdminDashboardScreen() {
     totalDonors: 0,
     activeCampaigns: 0,
   });
-
+  const [orgName, setOrgName] = useState('Your Organization');
   const [recentDonations, setRecentDonations] = useState<any[]>([]);
 
   useEffect(() => {
     loadDashboardData();
   }, []);
 
-  const loadDashboardData = () => {
-    // Calculate stats from mock data
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const loadDashboardData = async () => {
+    try {
+      const organizationId = await getAdminOrganizationId();
+      
+      // Fetch organization stats and recent data in parallel
+      const [orgStats, orgData, campaigns, donations] = await Promise.all([
+        api.get(`/organizations/${organizationId}/stats`),
+        api.get(`/organizations/${organizationId}`),
+        api.get(`/organizations/${organizationId}/campaigns`),
+        api.get(`/organizations/${organizationId}/donations`).catch(() => []),
+      ]);
 
-    const todayDonations = mockDonations.filter(
-      d => new Date(d.createdAt) >= today
-    );
-    const weekDonations = mockDonations.filter(
-      d => new Date(d.createdAt) >= weekAgo
-    );
-    const monthDonations = mockDonations.filter(
-      d => new Date(d.createdAt) >= monthAgo
-    );
+      // Set organization name
+      setOrgName(orgData.name || 'Your Organization');
 
-    setStats({
-      todayDonations: todayDonations.length,
-      todayAmount: todayDonations.reduce((sum, d) => sum + parseFloat(d.amount), 0),
-      weekAmount: weekDonations.reduce((sum, d) => sum + parseFloat(d.amount), 0),
-      monthAmount: monthDonations.reduce((sum, d) => sum + parseFloat(d.amount), 0),
-      totalDonors: new Set(mockDonations.map(d => `${d.donorFirstName} ${d.donorLastName}`)).size,
-      activeCampaigns: mockCampaigns.filter(c => c.isActive).length,
-    });
+      // Calculate today's stats
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      const todayDonations = donations.filter((d: any) => 
+        new Date(d.createdAt || d.created_at) >= today
+      );
+      
+      const weekDonations = donations.filter((d: any) => 
+        new Date(d.createdAt || d.created_at) >= weekAgo
+      );
 
-    // Get 5 most recent donations
-    setRecentDonations(
-      [...mockDonations]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 5)
-    );
+      setStats({
+        todayDonations: todayDonations.length,
+        todayAmount: todayDonations.reduce((sum: number, d: any) => 
+          sum + parseFloat(d.amount || d.total_amount || 0), 0),
+        weekAmount: weekDonations.reduce((sum: number, d: any) => 
+          sum + parseFloat(d.amount || d.total_amount || 0), 0),
+        monthAmount: parseFloat(orgStats.totalRaised || orgStats.total_raised || 0),
+        totalDonors: parseInt(orgStats.uniqueDonors || orgStats.unique_donors || 0),
+        activeCampaigns: campaigns.filter((c: any) => c.isActive || c.is_active).length,
+      });
+
+      // Get 5 most recent donations with donor information
+      const recentWithDonors = await Promise.all(
+        donations.slice(0, 5).map(async (donation: any) => {
+          try {
+            const donor = await api.get(`/donors/${donation.donorId || donation.donor_id}`);
+            return {
+              ...donation,
+              donorFirstName: donor.firstName || donor.first_name,
+              donorLastName: donor.lastName || donor.last_name,
+            };
+          } catch {
+            return {
+              ...donation,
+              donorFirstName: 'Anonymous',
+              donorLastName: 'Donor',
+            };
+          }
+        })
+      );
+      
+      setRecentDonations(recentWithDonors);
+      setLoading(false);
+    } catch (error: any) {
+      console.error('Error loading dashboard data:', error);
+      Alert.alert('Error', 'Failed to load dashboard data. Please try again.');
+      setLoading(false);
+    }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    loadDashboardData();
-    setTimeout(() => setRefreshing(false), 1000);
+    await loadDashboardData();
+    setRefreshing(false);
   };
 
   return (
@@ -72,7 +108,7 @@ export default function AdminDashboardScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Welcome back!</Text>
-          <Text style={styles.orgName}>Life Choice Pregnancy Center</Text>
+          <Text style={styles.orgName}>{orgName}</Text>
         </View>
         <TouchableOpacity style={styles.notificationButton}>
           <Ionicons name="notifications-outline" size={28} color="#333" />
