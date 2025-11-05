@@ -139,24 +139,26 @@ export default function OrganizationProfileScreen() {
       </View>
 
       {/* Tab Navigation */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabContainer}>
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-            onPress={() => setActiveTab(tab.key)}
-          >
-            <Ionicons
-              name={tab.icon as any}
-              size={20}
-              color={activeTab === tab.key ? '#0d72b9' : '#666'}
-            />
-            <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <View style={styles.tabContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScrollContent}>
+          {tabs.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+              onPress={() => setActiveTab(tab.key)}
+            >
+              <Ionicons
+                name={tab.icon as any}
+                size={20}
+                color={activeTab === tab.key ? '#0d72b9' : '#666'}
+              />
+              <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
       <ScrollView style={styles.content}>
         {/* Details Tab */}
@@ -487,6 +489,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+  },
+  tabScrollContent: {
     paddingHorizontal: 16,
   },
   tab: {
