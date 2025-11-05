@@ -3,9 +3,12 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { storage } from '@/services/storage';
+import { useAppDispatch } from '@/store/hooks';
+import { logout as donorLogout } from '@/store/slices/authSlice';
 
 export default function AdminLoginScreen() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -19,8 +22,15 @@ export default function AdminLoginScreen() {
     setIsLoading(true);
 
     try {
+      // FIRST: Log out of donor account if logged in
+      console.log('Admin login: Logging out of donor account (if any)...');
+      await dispatch(donorLogout());
+      
+      // Small delay to ensure donor logout completes
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       // Mock admin authentication - replace with real API call later
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       const mockAdminUser = {
         id: 'admin-1',
