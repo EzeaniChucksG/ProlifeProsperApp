@@ -110,6 +110,42 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
+app.post('/api/auth/signin', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await db.query.users.findFirst({
+      where: eq(schema.users.email, email),
+    });
+
+    if (!user || !user.hashedPassword) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const isValid = await bcrypt.compare(password, user.hashedPassword);
+    if (!isValid) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const token = generateToken(user.id);
+
+    res.json({ 
+      user: { 
+        id: user.id, 
+        firstName: user.firstName, 
+        lastName: user.lastName, 
+        email: user.email,
+        role: user.role,
+        organizationId: user.organizationId
+      }, 
+      token 
+    });
+  } catch (error: any) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: error.message || 'Login failed' });
+  }
+});
+
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -322,8 +358,8 @@ app.get('/health', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`\n🚀 ProLifeProsper Mobile Server running on http://localhost:${PORT}`);
-  console.log(`📡 API Base: http://localhost:${PORT}/api`);
-  console.log(`💚 Health Check: http://localhost:${PORT}/health\n`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n🚀 ProLifeProsper Mobile Server running on http://0.0.0.0:${PORT}`);
+  console.log(`📡 API Base: http://0.0.0.0:${PORT}/api`);
+  console.log(`💚 Health Check: http://0.0.0.0:${PORT}/health\n`);
 });
