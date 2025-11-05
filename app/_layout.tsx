@@ -39,9 +39,15 @@ function RootLayoutNav() {
     const standaloneScreens = ['donate', 'campaign', 'scan', 'payment-methods', 'notifications', 'admin'];
     const isStandaloneScreen = standaloneScreens.includes(segments[0] || '');
 
-    if (!isAuthenticated && !inAuthGroup && !inAdminAuthGroup) {
+    // Admin routes are handled by their own auth guards - don't interfere
+    if (inAdminAuthGroup || inAdminTabsGroup) {
+      return; // Let admin routes handle their own authentication
+    }
+
+    // Donor authentication logic
+    if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/login');
-    } else if (isAuthenticated && !inTabsGroup && !inAdminTabsGroup && !inAuthGroup && !inAdminAuthGroup && !isStandaloneScreen) {
+    } else if (isAuthenticated && !inTabsGroup && !inAuthGroup && !isStandaloneScreen) {
       router.replace('/(tabs)');
     }
   }, [isAuthenticated, authLoaded, segments]);

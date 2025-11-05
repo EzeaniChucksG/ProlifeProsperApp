@@ -33,10 +33,23 @@ export default function AdminLoginScreen() {
       };
 
       // Save admin auth state
+      console.log('Admin login: Saving admin user to storage...');
       await storage.setItem('admin_user', JSON.stringify(mockAdminUser));
       await storage.setItem('admin_token', 'mock-admin-token');
+      
+      // Verify storage was saved
+      const savedUser = await storage.getItem('admin_user');
+      const savedToken = await storage.getItem('admin_token');
+      console.log('Admin login: Storage verified -', { 
+        hasUser: !!savedUser, 
+        hasToken: !!savedToken 
+      });
+
+      // Small delay to ensure storage is fully committed
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Navigate to admin dashboard
+      console.log('Admin login: Navigating to admin tabs...');
       router.replace('/(admin-tabs)');
     } catch (error) {
       console.error('Admin login error:', error);
