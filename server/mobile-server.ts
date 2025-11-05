@@ -249,6 +249,60 @@ app.get('/api/organizations/:id', async (req, res) => {
   }
 });
 
+app.get('/api/organizations/:id/campaigns', async (req, res) => {
+  try {
+    const organizationId = parseInt(req.params.id);
+    const campaigns = await db.query.campaigns.findMany({
+      where: eq(schema.campaigns.organizationId, organizationId),
+      orderBy: (campaigns, { desc }) => [desc(campaigns.createdAt)],
+    });
+    res.json(campaigns);
+  } catch (error: any) {
+    console.error('Fetch organization campaigns error:', error);
+    res.status(500).json({ message: 'Failed to fetch campaigns' });
+  }
+});
+
+app.get('/api/organizations/:id/stats', async (req, res) => {
+  try {
+    const organizationId = parseInt(req.params.id);
+    
+    // Get total donations count and amount
+    const donations = await db.query.donations.findMany({
+      where: eq(schema.donations.organizationId, organizationId),
+    });
+    
+    const totalRaised = donations.reduce((sum, d) => sum + parseFloat(d.amount || '0'), 0);
+    const totalDonations = donations.length;
+    
+    // Get unique donors
+    const uniqueDonorIds = new Set(donations.map(d => d.donorId).filter(Boolean));
+    const totalDonors = uniqueDonorIds.size;
+    
+    // Calculate average
+    const averageDonation = totalDonations > 0 ? totalRaised / totalDonations : 0;
+    
+    // Get current month total
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthlyDonations = donations.filter(d => 
+      new Date(d.createdAt) >= monthStart
+    );
+    const monthlyTotal = monthlyDonations.reduce((sum, d) => sum + parseFloat(d.amount || '0'), 0);
+    
+    res.json({
+      totalRaised: totalRaised.toFixed(2),
+      totalDonations,
+      totalDonors,
+      averageDonation: averageDonation.toFixed(2),
+      monthlyTotal: monthlyTotal.toFixed(2),
+    });
+  } catch (error: any) {
+    console.error('Fetch organization stats error:', error);
+    res.status(500).json({ message: 'Failed to fetch organization stats' });
+  }
+});
+
 // ======================
 // DONATION ROUTES
 // ======================
