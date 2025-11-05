@@ -78,6 +78,82 @@ class ApiClient {
     }
   }
 
+  // Generic HTTP methods for admin operations
+  private async requestWithOptionalJson<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string>),
+    };
+
+    if (this.authToken) {
+      headers['Authorization'] = `Bearer ${this.authToken}`;
+    }
+
+    const url = `${this.baseUrl}${endpoint}`;
+    console.log(`API Request: ${options.method || 'GET'} ${url}`);
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    console.log(`API Response: ${response.status} ${response.statusText}`);
+
+    if (!response.ok) {
+      const error: ApiError = await response.json().catch(() => ({
+        message: 'An error occurred',
+      }));
+      console.error('API Error:', error);
+      throw new Error(error.message || 'Request failed');
+    }
+
+    // Handle 204 No Content and other empty responses
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
+      return {} as T;
+    }
+
+    // Check if response has JSON content
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json();
+    }
+
+    // For non-JSON responses, return empty object
+    return {} as T;
+  }
+
+  async get<T = any>(endpoint: string): Promise<T> {
+    return this.requestWithOptionalJson<T>(endpoint, { method: 'GET' });
+  }
+
+  async post<T = any>(endpoint: string, data?: any): Promise<T> {
+    return this.requestWithOptionalJson<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async put<T = any>(endpoint: string, data?: any): Promise<T> {
+    return this.requestWithOptionalJson<T>(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async patch<T = any>(endpoint: string, data?: any): Promise<T> {
+    return this.requestWithOptionalJson<T>(endpoint, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async delete<T = any>(endpoint: string): Promise<T> {
+    return this.requestWithOptionalJson<T>(endpoint, { method: 'DELETE' });
+  }
+
   // Auth endpoints
   async login(data: LoginRequest): Promise<LoginResponse> {
     console.log('API: Attempting login to', `${this.baseUrl}/auth/signin`);

@@ -38,8 +38,8 @@ export default function MoreScreen() {
     {
       section: 'Manage',
       items: [
-        { icon: 'megaphone-outline', label: 'Campaigns', comingSoon: true },
-        { icon: 'people-outline', label: 'Donors', comingSoon: true },
+        { icon: 'megaphone-outline', label: 'Campaigns', route: '/admin/campaigns' },
+        { icon: 'people-outline', label: 'Donors', route: '/admin/donors' },
         { icon: 'calendar-outline', label: 'Events', comingSoon: true },
         { icon: 'card-outline', label: 'Payment Methods', comingSoon: true },
       ],
@@ -47,7 +47,7 @@ export default function MoreScreen() {
     {
       section: 'Settings',
       items: [
-        { icon: 'business-outline', label: 'Organization Profile', comingSoon: true },
+        { icon: 'business-outline', label: 'Organization Profile', route: '/admin/organization-profile' },
         { icon: 'settings-outline', label: 'App Settings', comingSoon: true },
         { icon: 'shield-checkmark-outline', label: 'Security', comingSoon: true },
         { icon: 'help-circle-outline', label: 'Help & Support', comingSoon: true },
