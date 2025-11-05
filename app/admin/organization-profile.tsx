@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { api } from '@/services/api';
+import { getAdminUser } from '@/services/adminAuth';
 
 interface Organization {
   id: number;
@@ -45,38 +46,51 @@ export default function OrganizationProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('details');
+  const [organizationId, setOrganizationId] = useState<number | null>(null);
   
   // Form state
   const [formData, setFormData] = useState<Partial<Organization>>({});
 
   useEffect(() => {
-    loadOrganization();
+    initializeData();
   }, []);
 
-  const loadOrganization = async () => {
+  const initializeData = async () => {
+    const adminUser = await getAdminUser();
+    if (adminUser?.organizationId) {
+      setOrganizationId(adminUser.organizationId);
+      loadOrganization(adminUser.organizationId);
+    } else {
+      Alert.alert('Error', 'No organization found for this admin');
+      setLoading(false);
+    }
+  };
+
+  const loadOrganization = async (orgId: number) => {
     try {
       setLoading(true);
-      // Assuming organization ID 1 for demo
-      const org = await api.get<Organization>('/organizations/1');
+      const org = await api.get<Organization>(`/organizations/${orgId}`);
       setOrganization(org);
       setFormData(org);
     } catch (error) {
       console.error('Error loading organization:', error);
-      // Use mock data as fallback
-      const mockOrg = getMockOrganization();
-      setOrganization(mockOrg);
-      setFormData(mockOrg);
+      Alert.alert('Error', 'Failed to load organization data');
     } finally {
       setLoading(false);
     }
   };
 
   const handleSave = async () => {
+    if (!organizationId) {
+      Alert.alert('Error', 'No organization ID available');
+      return;
+    }
+    
     try {
       setSaving(true);
-      await api.patch('/organizations/1/settings', formData);
+      await api.patch(`/organizations/${organizationId}/settings`, formData);
       Alert.alert('Success', 'Organization profile updated successfully!');
-      loadOrganization();
+      loadOrganization(organizationId);
     } catch (error) {
       console.error('Error saving organization:', error);
       Alert.alert('Error', 'Failed to update organization profile');
@@ -448,31 +462,6 @@ export default function OrganizationProfileScreen() {
       </ScrollView>
     </KeyboardAvoidingView>
   );
-}
-
-function getMockOrganization(): Organization {
-  return {
-    id: 1,
-    name: 'Life Choice Pregnancy Center',
-    slug: 'life-choice-pc',
-    ein: '12-3456789',
-    email: 'info@lifechoicepc.org',
-    phone: '(555) 234-5678',
-    website: 'https://lifechoicepc.org',
-    address: '123 Hope Street',
-    city: 'Springfield',
-    state: 'IL',
-    zipCode: '62701',
-    description:
-      'We provide compassionate support and resources to women facing unplanned pregnancies.',
-    mission: 'To save lives and empower women to choose life through love, support, and practical help.',
-    logoUrl: '',
-    primaryColor: '#0d72b9',
-    secondaryColor: '#26b578',
-    socialFacebook: 'facebook.com/lifechoicepc',
-    socialTwitter: 'twitter.com/lifechoicepc',
-    socialInstagram: 'instagram.com/lifechoicepc',
-  };
 }
 
 const styles = StyleSheet.create({
