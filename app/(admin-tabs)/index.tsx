@@ -55,11 +55,11 @@ export default function AdminDashboardScreen() {
       setStats({
         todayDonations: todayDonations.length,
         todayAmount: todayDonations.reduce((sum: number, d: any) => 
-          sum + parseFloat(d.amount || d.total_amount || 0), 0),
+          sum + parseFloat(d.amount || 0), 0),
         weekAmount: weekDonations.reduce((sum: number, d: any) => 
-          sum + parseFloat(d.amount || d.total_amount || 0), 0),
-        monthAmount: parseFloat(orgStats.totalRaised || orgStats.total_raised || 0),
-        totalDonors: parseInt(orgStats.uniqueDonors || orgStats.unique_donors || 0),
+          sum + parseFloat(d.amount || 0), 0),
+        monthAmount: parseFloat(orgStats.monthlyTotal || 0),
+        totalDonors: parseInt(orgStats.totalDonors || 0),
         activeCampaigns: campaigns.filter((c: any) => c.isActive || c.is_active).length,
       });
 
@@ -187,10 +187,10 @@ export default function AdminDashboardScreen() {
                 {donation.donorFirstName} {donation.donorLastName}
               </Text>
               <Text style={styles.donationDate}>
-                {new Date(donation.createdAt).toLocaleDateString()}
+                {new Date(donation.createdAt || donation.created_at).toLocaleDateString()}
               </Text>
             </View>
-            <Text style={styles.donationAmount}>${donation.amount}</Text>
+            <Text style={styles.donationAmount}>${parseFloat(donation.amount || 0).toFixed(2)}</Text>
           </View>
         ))}
       </View>
