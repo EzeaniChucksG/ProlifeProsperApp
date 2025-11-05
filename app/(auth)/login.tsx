@@ -95,6 +95,23 @@ export default function LoginScreen() {
             </Text>
           </Pressable>
         </View>
+
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>OR</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <Pressable 
+          style={styles.adminButton}
+          onPress={() => {
+            console.log('Admin login clicked');
+            router.push('/(admin-auth)/admin-login');
+          }}
+          disabled={isLoading}
+        >
+          <Text style={styles.adminButtonText}>🏢 Organization Admin Login</Text>
+        </Pressable>
       </View>
     </KeyboardAvoidingView>
   );
@@ -159,6 +176,35 @@ const styles = StyleSheet.create({
   },
   linkTextBold: {
     color: '#0d72b9',
+    fontWeight: '600',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e0e0e0',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    color: '#999',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  adminButton: {
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#0d72b9',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  adminButtonText: {
+    color: '#0d72b9',
+    fontSize: 16,
     fontWeight: '600',
   },
 });
