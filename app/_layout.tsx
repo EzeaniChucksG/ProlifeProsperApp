@@ -34,13 +34,14 @@ function RootLayoutNav() {
     const inAdminAuthGroup = segments[0] === '(admin-auth)';
     const inTabsGroup = segments[0] === '(tabs)';
     const inAdminTabsGroup = segments[0] === '(admin-tabs)';
+    const inAdminScreen = segments[0] === 'admin'; // Admin standalone screens
     
     // Standalone authenticated screens that shouldn't redirect
-    const standaloneScreens = ['donate', 'campaign', 'scan', 'payment-methods', 'notifications', 'admin'];
+    const standaloneScreens = ['donate', 'campaign', 'scan', 'payment-methods', 'notifications'];
     const isStandaloneScreen = standaloneScreens.includes(segments[0] || '');
 
-    // Admin routes are handled by their own auth guards - don't interfere
-    if (inAdminAuthGroup || inAdminTabsGroup) {
+    // Admin routes (groups and standalone screens) are handled by their own auth guards - don't interfere
+    if (inAdminAuthGroup || inAdminTabsGroup || inAdminScreen) {
       return; // Let admin routes handle their own authentication
     }
 

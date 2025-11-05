@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { storage } from '@/services/storage';
 import { useAppDispatch } from '@/store/hooks';
 import { logout as donorLogout } from '@/store/slices/authSlice';
+import { api } from '@/services/api';
 
 export default function AdminLoginScreen() {
   const router = useRouter();
@@ -29,41 +30,63 @@ export default function AdminLoginScreen() {
       // Small delay to ensure donor logout completes
       await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Mock admin authentication - replace with real API call later
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const mockAdminUser = {
-        id: 'admin-1',
-        email: email,
-        firstName: 'Admin',
-        lastName: 'User',
-        role: 'admin',
-        organizationId: 1,
-        organizationName: 'Life Choice Pregnancy Center',
+      // Real API authentication
+      console.log('Admin login: Authenticating with backend API...');
+      const response = await api.post('/auth/signin', {
+        email,
+        password,
+      });
+
+      if (!response.user || !response.token) {
+        throw new Error('Invalid response from server');
+      }
+
+      // Verify user has admin role
+      if (response.user.role !== 'admin' && response.user.role !== 'super_admin' && response.user.role !== 'staff_member') {
+        Alert.alert(
+          'Access Denied', 
+          'This account does not have admin privileges. Please use the donor app instead.'
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      // Get organization name if not included
+      let organizationName = 'Your Organization';
+      if (response.user.organizationId) {
+        try {
+          const org = await api.get(`/organizations/${response.user.organizationId}`);
+          organizationName = org.name || organizationName;
+        } catch (orgError) {
+          console.error('Error fetching organization:', orgError);
+        }
+      }
+
+      const adminUser = {
+        id: response.user.id,
+        email: response.user.email,
+        firstName: response.user.firstName || 'Admin',
+        lastName: response.user.lastName || 'User',
+        role: response.user.role,
+        organizationId: response.user.organizationId,
+        organizationName,
       };
 
       // Save admin auth state
       console.log('Admin login: Saving admin user to storage...');
-      await storage.setItem('admin_user', JSON.stringify(mockAdminUser));
-      await storage.setItem('admin_token', 'mock-admin-token');
+      await storage.setItem('admin_user', JSON.stringify(adminUser));
+      await storage.setItem('admin_token', response.token);
       
-      // Verify storage was saved
-      const savedUser = await storage.getItem('admin_user');
-      const savedToken = await storage.getItem('admin_token');
-      console.log('Admin login: Storage verified -', { 
-        hasUser: !!savedUser, 
-        hasToken: !!savedToken 
-      });
-
       // Small delay to ensure storage is fully committed
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Navigate to admin dashboard
       console.log('Admin login: Navigating to admin tabs...');
       router.replace('/(admin-tabs)');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Admin login error:', error);
-      Alert.alert('Login Failed', 'Unable to sign in. Please check your credentials.');
+      const errorMessage = error?.message || error?.error || 'Unable to sign in. Please check your credentials.';
+      Alert.alert('Login Failed', errorMessage);
     } finally {
       setIsLoading(false);
     }
